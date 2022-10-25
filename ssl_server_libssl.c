@@ -8,10 +8,6 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 
-//#define SSL_SERVER_RSA_CERT	"/home/ubuntu/Projects/SSL-TLS-clientserver/certs/ssl_server.crt"
-//#define SSL_SERVER_RSA_KEY	"/home/ubuntu/Projects/SSL-TLS-clientserver/certs/ssl_server.key"
-//#define SSL_SERVER_RSA_CA_CERT	"/home/ubuntu/Projects/SSL-TLS-clientserver/certs/ca.crt"
-
 #define SSL_SERVER_RSA_CERT "/tmp/certs/server-cert.pem"
 #define SSL_SERVER_RSA_KEY  "/tmp/certs/server-key.pem"
 #define SSL_SERVER_RSA_CA_CERT  "/tmp/certs/ca-cert.pem"

@@ -8,15 +8,10 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 
-//#define SSL_CLIENT_RSA_CERT	"/home/ubuntu/Projects/SSL-TLS-clientserver/certs/ssl_client.crt"
-//#define SSL_CLIENT_RSA_KEY	"/home/ubuntu/Projects/SSL-TLS-clientserver/certs/ssl_client.key"
-//#define SSL_CLIENT_RSA_CA_CERT	"/home/ubuntu/Projects/SSL-TLS-clientserver/certs/ca.crt"
-
 #define SSL_CLIENT_RSA_CERT "/tmp/certs/client-cert.pem"
 #define SSL_CLIENT_RSA_KEY  "/tmp/certs/client-key.pem"
 #define SSL_CLIENT_RSA_CA_CERT "/tmp/certs/ca-cert.pem"
-
-#define PORT 5000
+#define PORT 20000
 
 #define OFF	0
 #define ON	1
