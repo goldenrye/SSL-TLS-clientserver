@@ -4,17 +4,28 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <string.h>
-
+#include <jansson.h>
+#include <stdbool.h>
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 
 #define SSL_SERVER_RSA_CERT "/tmp/certs/server-cert.pem"
 #define SSL_SERVER_RSA_KEY  "/tmp/certs/server-key.pem"
 #define SSL_SERVER_RSA_CA_CERT  "/tmp/certs/ca-cert.pem"
-#define PORT 20000
+#define PORT 5000
 
 #define OFF	0
 #define ON	1
+
+static bool
+validate_user_token(const char *user, const char *token)
+{
+    if (strncmp(user, "jpi@lookout.com", 16) == 0 &&
+        strncmp(token, "123456", 7) == 0) {
+        return true;
+    } else
+        return false;
+}
 
 int main(void)
 {
@@ -25,6 +36,13 @@ int main(void)
 	int clientsocketfd;
 	struct sockaddr_in serveraddr;
 	int handshakestatus;
+    char user[32], token[64];
+    json_t *root;
+    json_error_t error;
+    size_t size;
+    const char *key;
+    json_t *value;
+    char *reply = NULL;
 
 	SSL_library_init();
 	SSL_load_error_strings();
@@ -92,7 +110,7 @@ int main(void)
 	while(1)
 	{
 		SSL *serverssl;
-		char buffer[1024];
+		char buffer[8192];
 		int bytesread = 0;
 		int addedstrlen;
 		int ret;
@@ -133,11 +151,41 @@ int main(void)
 				printf("There is no client certificate\n");
 		}
 		bytesread = SSL_read(serverssl, buffer, sizeof(buffer));
-		addedstrlen = strlen("Appended by SSL server");
-		strncpy(&buffer[bytesread], "Appended by SSL server", addedstrlen);
-		buffer[bytesread +  addedstrlen ] = '\0';
-		buffer[bytesread-1] = ' ';
-		SSL_write(serverssl, buffer, bytesread + addedstrlen + 1);
+		bytesread = (bytesread >= 8192 ? 8191 : bytesread);
+        buffer[bytesread] = 0;
+        root = json_loads(buffer, 0, &error);
+        if (!root || json_typeof(root) != JSON_OBJECT) {
+            // need to send the reply message?
+			SSL_shutdown(serverssl);
+			close(clientsocketfd);
+			clientsocketfd = -1;
+			SSL_free(serverssl);
+			serverssl = NULL;
+            continue;
+        }
+        size = json_object_size(root);
+        json_object_foreach(root, key, value) {
+            if (strncmp(key, "User", 5) == 0) {
+                strncpy(user, json_string_value(value), 32);
+            }
+            if (strncmp(key, "Token", 6) == 0) {
+                strncpy(token, json_string_value(value), 64);
+            }
+        }
+        json_decref(root);
+        if (validate_user_token(user, token)) {
+            printf("user: %s, token: %s, validation succeeded\n", user, token);
+            root = json_object();
+            json_object_set_new(root, "Auth", json_true());
+            json_object_set_new(root, "Cookie", json_integer(0xaddfeed));
+            reply = json_dumps(root, 0);
+        } else {
+            printf("user: %s, token: %s, validation failed\n", user, token);
+            root = json_object();
+            json_object_set_new(root, "Auth", json_false());
+            reply = json_dumps(root, 0);
+        }
+		SSL_write(serverssl, reply, strlen(reply));
 		SSL_shutdown(serverssl);
 		close(clientsocketfd);
 		clientsocketfd = -1;
