@@ -78,7 +78,7 @@ int main(void)
 	}
 	memset(&serveraddr, 0, sizeof(struct sockaddr_in));
 	serveraddr.sin_family = AF_INET;
-    serveraddr.sin_addr.s_addr = inet_addr("172.17.0.36");
+    serveraddr.sin_addr.s_addr = inet_addr("172.16.0.23");
     serveraddr.sin_port = htons(PORT);
 
 	connect(clientsocketfd, (struct sockaddr *)&serveraddr, sizeof(struct sockaddr_in));
